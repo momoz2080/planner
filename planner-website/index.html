@@ -635,14 +635,14 @@ span.tpill{cursor:default;display:inline-flex;align-items:center}
 html.placing-on .tl-body{cursor:crosshair}
 /* edit sheet */
 .sheet-bg{position:fixed;inset:0;z-index:900;background:rgba(10,20,18,.38);display:flex;align-items:center;justify-content:center;padding:16px}
-.sheet{width:min(460px,100%);background:var(--surface);color:var(--ink);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:10px;box-shadow:0 20px 50px rgba(0,0,0,.3)}
+.sheet{width:min(460px,100%);max-height:calc(100vh - 24px);max-height:calc(100dvh - 24px);overflow-y:auto;overscroll-behavior:contain;background:var(--surface);color:var(--ink);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:10px;box-shadow:0 20px 50px rgba(0,0,0,.3)}
 .sheet .ch{margin:0}.sheet .ch .x{margin-left:auto}
 .sheet input:not([type=checkbox]){border:1px solid var(--line-2);background:var(--surface);border-radius:8px;padding:7px 9px;min-width:0;color:var(--ink)}
 .sheet .shT{font-size:16px;font-weight:700}
 .shrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .shbtns{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:4px}.shbtns .sp{flex:1}
 .ib.danger{color:var(--bad);border-color:color-mix(in srgb,var(--bad) 45%,var(--line-2))}
-@media (max-width:640px){.sheet-bg{align-items:flex-end;padding:0}.sheet{border-radius:16px 16px 0 0;padding-bottom:calc(16px + env(safe-area-inset-bottom))}}
+@media (max-width:640px){.sheet-bg{align-items:flex-end;padding:0}.sheet{max-height:calc(100vh - 8px);max-height:calc(100dvh - 8px);border-radius:16px 16px 0 0;padding-bottom:calc(16px + env(safe-area-inset-bottom))}}
 /* address suggestions */
 .addrbox{position:absolute;z-index:950;background:var(--surface);border:1px solid var(--line-2);border-radius:10px;box-shadow:0 10px 28px rgba(0,0,0,.18);overflow:hidden;max-height:260px;overflow-y:auto}
 .addrbox button{display:flex;gap:8px;align-items:flex-start;width:100%;text-align:left;border:0;border-bottom:1px solid var(--line);background:transparent;padding:8px 10px;color:var(--ink);cursor:pointer}
@@ -664,7 +664,16 @@ html.placing-on .tl-body{cursor:crosshair}
 @media (max-width:640px){.loop .content .ch .right{font-size:12px;padding:4px 8px}}
 .evl input[type=time]{min-width:122px}
 .shinfo{display:flex;flex-direction:column;gap:6px;align-items:flex-start;padding:10px 12px;border-radius:10px;background:var(--surface-2)}
-.shwhen{font-weight:700;font-size:14px}.shaddr{font-size:15px;line-height:1.35}.shinfo .sub{font-size:12.5px;color:var(--ink-3)}
+.blk .bp{font-size:11.5px;line-height:1.25;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:.85}
+.blk .bp2{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.shwhen{font-weight:700;font-size:14px}.shfac{font-size:15.5px}
+.trip{display:flex;flex-direction:column;gap:6px;padding:10px 12px;border:1px solid var(--line-2);border-radius:10px}
+.trip .tfac{flex-wrap:wrap}.trip .tfac input{flex:1 1 200px}
+.tleg{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center}.tleg input[id$="A"]:not(.num){flex:1 1 220px}
+.tleg .evl input#shL{flex:1 1 200px}
+.tdot{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:800;background:var(--acc);color:var(--acc-ink);flex:none}
+.tdot.b{background:var(--q-drop)}.tline{width:22px;align-self:stretch;flex:none;background:linear-gradient(var(--line-2),var(--line-2)) center/2px 100% no-repeat}
+.tfind{height:30px;font-size:12.5px}#shTrip{margin:2px 0 0;font-size:12.5px;color:var(--ink-3)}.shaddr{font-size:15px;line-height:1.35}.shinfo .sub{font-size:12.5px;color:var(--ink-3)}
 .blk,.lp{cursor:pointer}
 .itabs{display:flex;gap:4px;padding:3px;margin:-4px -4px 14px;background:var(--surface-2);border-radius:11px}
 .itabs button{flex:1;border:0;background:transparent;border-radius:8px;padding:9px 6px;font-weight:700;font-size:13.5px;color:var(--ink-3);cursor:pointer;white-space:nowrap}
@@ -1900,10 +1909,10 @@ const MODES={car:["🚗","Car","driving","car"],bike:["🚲","Bike","bicycling",
 const places=()=>((S.docs.settings||{}).places)||[];
 const placeById=id=>places().find(p=>p.id===id);
 const homeId=()=>(S.docs.settings||{}).homePlace||(places()[0]||{}).id||"";
-function evFromAddr(ev,d){if(!ev.from||ev.from==="none")return null;
+function evFromAddr(ev,d){if(!ev.from||ev.from==="none")return null;if(ev.from==="addr")return (ev.fromAddr||"").trim()||null;
   if(ev.from==="prev"){const prev=dayEvents(d).filter(e=>e.loc&&toMin(e.end)<=toMin(ev.start)&&e.id!==ev.id).sort((a,b)=>toMin(b.end)-toMin(a.end))[0];return prev?prev.loc:(placeById(homeId())||{}).addr||null}
   const p=placeById(ev.from);return p?p.addr:null}
-function fromLabel(ev){if(!ev.from||ev.from==="none")return "";if(ev.from==="prev")return "previous stop";const p=placeById(ev.from);return p?p.name:"";}
+function fromLabel(ev){if(!ev.from||ev.from==="none")return "";if(ev.from==="prev")return "previous stop";if(ev.from==="addr")return (ev.fromAddr||"").split(",")[0];const p=placeById(ev.from);return p?p.name:"";}
 function mapsLink(from,to,mode){return `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(from||"")}&destination=${encodeURIComponent(to||"")}&travelmode=${(MODES[mode]||MODES.car)[2]}`}
 const geoCache={};
 async function geocode(addr){const k=addr.trim().toLowerCase();if(geoCache[k])return geoCache[k];
@@ -1917,7 +1926,7 @@ async function estimateTravel(from,to,mode){const prof=(MODES[mode]||MODES.car)[
   const min=Math.ceil(j.routes[0].duration/60);return mode==="car"?Math.ceil((min*1.1+5)/5)*5:Math.ceil(min/5)*5}
 function travelItems(d){const out=[];dayEvents(d).forEach(e=>{const tr=+e.travel||0;if(!tr)return;const s=toMin(e.start),en=toMin(e.end);const ic=(MODES[e.mode]||MODES.car)[0];
   out.push({k:"tr",id:e.id+":to",t:`${ic} ${fmtH(tr)} to ${e.loc||e.t}`,s:s-tr,e:s,q:"tr",sub:`leave ${fmtT(s-tr)}${fromLabel(e)?" from "+fromLabel(e):""}`});
-  if(e.rt)out.push({k:"tr",id:e.id+":back",t:`${ic} ${fmtH(tr)} back`,s:en,e:en+tr,q:"tr",sub:`home by ${fmtT(en+tr)}`})});return out}
+  if(e.client?(evNext(e)==="home"||evNext(e)==="addr"):e.rt)out.push({k:"tr",id:e.id+":back",t:`${ic} ${fmtH(tr)} ${e.client&&evNext(e)==="addr"?"to "+esc((e.nextAddr||"").split(",")[0]):"back"}`,s:en,e:en+tr,q:"tr",sub:`${e.client&&evNext(e)==="addr"?"there":"home"} by ${fmtT(en+tr)}`})});return out}
 function placeOptions(sel){const ps=places();return `${ps.map(p=>`<option value="${p.id}" ${sel===p.id?"selected":""}>${p.id===homeId()?"★ ":""}${esc(p.name)}</option>`).join("")}<option value="prev" ${sel==="prev"?"selected":""}>Previous stop</option><option value="none" ${sel==="none"?"selected":""}>No travel</option>`}
 function placesBox(){const ps=places();return `<details class="places" ${ps.length?"":"open"}><summary>My places <span class="sub">${ps.length?ps.map(p=>esc(p.name)).join(" · "):"add Home or Work to estimate travel"}</span></summary>
   <ul class="rules">${ps.map(p=>`<li><button class="x" data-cal="home" data-id="${p.id}" title="Default starting place" aria-pressed="${p.id===homeId()}">${p.id===homeId()?"★":"☆"}</button><span class="rt"><b>${esc(p.name)}</b> <span class="sub">${esc(p.addr)}</span></span><span></span><button class="x" data-cal="delplace" data-id="${p.id}" title="Remove">✕</button></li>`).join("")}</ul>
@@ -1967,14 +1976,15 @@ function timeline(d,{review=false,compact=false}={}){
 function allDayRow(d){const kd=keyDatesOn(d);return kd.length?`<div class="allday"><span>All day</span>${kd.map(k=>`<span class="kd kd-${k.kind}">${k.kind==="off"?"🌴":k.kind==="deadline"?"⚑":"◆"} ${esc(k.t)}</span>`).join("")}</div>`:""}
 function eventForm(d,o={}){const n=o.start??nextSlot(d,60)??calCfg().w0;const st=S.docs.settings||{};return `<form class="evform ev2" data-cal-form="event" data-ds="${iso(d)}" data-kind="${o.client?"client":"event"}">
    <input id="evT" placeholder="${o.client?"Patient's name (saved as First L.)":"Meeting or fixed event"}" aria-label="Name" style="flex:1 1 100%" autocomplete="off">
-   <label class="evl cl-only"><span>Job#</span><input id="evJob" autocomplete="off" style="width:110px"></label><button type="button" class="ib cl-only syncb" data-sync title="Bring in your jobs from the interpreter schedule">⟳ Sync schedule</button>
+   <label class="evl cl-only"><span>Job#</span><input id="evJob" autocomplete="off" style="width:110px"></label><label class="evl cl-only" style="flex:1 1 220px"><span>Hospital / org.</span><input id="evFac" autocomplete="off" placeholder="optional"></label><button type="button" class="ib cl-only syncb" data-sync title="Bring in your jobs from the interpreter schedule">⟳ Sync schedule</button>
    ${o.date?`<label class="evl"><span>Date</span><input id="evD" type="date" value="${iso(d)}"></label>`:""}<label class="evl"><span>Start</span><input id="evS" type="time" step="60" value="${fromMin(n)}"></label><label class="evl"><span>End</span><input id="evE" type="time" step="60" value="${fromMin(Math.min(n+60,24*60-15))}"></label>${alBtn("1h",'id="evAl" data-alpick data-v="1h"')}<span class="ev-only">${repBtn("evRep")}</span>
    <input id="evL" data-addr="event" autocomplete="off" placeholder="📍 Location or address (optional)" aria-label="Location" style="flex:1 1 100%">
    <label class="evl"><span>From</span><select id="evF">${placeOptions(o.client?(homeId()||"none"):"none")}</select></label>
    <label class="evl"><span>By</span><select id="evM">${Object.entries(MODES).map(([k,v])=>`<option value="${k}" ${(st.lastMode||"car")===k?"selected":""}>${v[0]} ${v[1]}</option>`).join("")}</select></label>
    <label class="evl"><span>Travel</span><input id="evTr" class="num" inputmode="numeric" placeholder="min" style="width:64px"></label>
    <button type="button" class="ib" data-cal="estimate">Estimate</button>
-   <label class="evchk"><input type="checkbox" id="evRt" ${o.client?"checked":""}> Round trip</label>
+   <label class="evchk ev-only"><input type="checkbox" id="evRt" ${o.client?"checked":""}> Round trip</label>
+   <label class="evl cl-only"><span>Final destination</span><select id="evNx"><option value="home">★ Home (round trip)</option><option value="nextjob">Next job</option><option value="none">Nowhere (one way)</option></select></label>
    <button class="ib primary2">${o.client?"Add client":"Add event"}</button>
    <p class="note" id="evMsg" style="flex:1 1 100%;margin:0">Travel is blocked out before the event. Estimates use OpenStreetMap routes without live traffic.</p></form>`}
 
@@ -2021,7 +2031,9 @@ document.addEventListener("submit",e=>{const f=e.target.closest("form[data-cal-f
     const ev={id:uid(),t,start:fromMin(s),end:fromMin(en),loc,from:loc?from:"none",mode,travel,rt,alarm:alPicked("evAl")};
     const erp=(($("#evRep")||{}).dataset||{}).v||"none";
     if(erp!=="none"&&f.dataset.kind!=="client"){const {id:_i,...tpl}=ev;newRule(erp,ds,{kind:"ev",ev:tpl});const b=$("#evRep");b.dataset.v="none";b.textContent=REPL.none;b.classList.add("off");$("#evT").value="";render();toast(`“${t}” repeats ${RECL[erp].toLowerCase()}`);return}
-    if(f.dataset.kind==="client"){ev.t=patName(t);ev.client={job:(($("#evJob")||{}).value||"").trim(),st:"completed"};const jb=$("#evJob");if(jb)jb.value=""}
+    if(f.dataset.kind==="client"){ev.t=patName(t);ev.client={job:(($("#evJob")||{}).value||"").trim(),st:"completed",fac:(($("#evFac")||{}).value||"").trim()};ev.next=($("#evNx")||{}).value||"home";ev.rt=ev.next==="home";
+      if(ev.from==="prev"){const p=(x.events||[]).filter(v=>v.client&&v.loc&&toMin(v.end)<=s).sort((a,b)=>toMin(b.end)-toMin(a.end))[0];if(p&&evNext(p)==="home"){p.next="nextjob";p.rt=false}}
+      ["evJob","evFac"].forEach(i=>{const n=$("#"+i);if(n)n.value=""})}
     x.events=x.events||[];x.events.push(ev);$("#evT").value="";persist("d"+ds);render();if(S.sub==="edit"||S.view==="day")toast(`Added “${ev.t}” · ${fmtDs(ds)} ${fmtT(s)}`);
     if(loc&&!travel&&from!=="none"&&mode!=="transit"){const fa=evFromAddr(ev,parse(ds));if(fa){toast("Estimating travel time…");
       estimateTravel(fa,loc,mode).then(m=>{const e2=(day(parse(ds)).events||[]).find(v=>v.id===ev.id);if(e2){e2.travel=m;persist("d"+ds);render();toast(`${(MODES[mode]||MODES.car)[0]} about ${fmtH(m)} · leave by ${fmtT(s-m)}`)}})
@@ -2358,15 +2370,41 @@ function drawSheet(){let m=document.getElementById("sheet");const it=S.sheet&&sh
     ${k==="task"?`<label class="evl"><span>Time</span><input id="shS" type="time" step="60" value="${it.start||""}"></label><label class="evl"><span>Min</span><input id="shE" class="num" inputmode="numeric" value="${it.est||30}" style="width:60px"></label>`
       :`<label class="evl"><span>Start</span><input id="shS" type="time" step="60" value="${it.start}"></label><label class="evl"><span>End</span><input id="shEn" type="time" step="60" value="${it.end}"></label>`}</div>
     ${k==="ev"&&it.client?`<div class="shrow"><button type="button" class="cst cst-${cSt(it)}" data-sh="cstat" id="shCs" data-v="${cSt(it)}">${CSTL[cSt(it)]}</button><label class="evl"><span>Job#</span><input id="shJob" value="${esc(it.client.job||"")}" style="width:100px"></label></div>
-      <div class="shrow"><label class="evl"><span>Real start</span><input id="shAs" type="time" step="60" value="${cAs(it)}"></label><label class="evl"><span>Real end</span><input id="shAe" type="time" step="60" value="${cAe(it)}"></label><label class="evl"><span>Miles</span><input id="shMi" class="num" inputmode="decimal" value="${it.client.mi??""}" placeholder="${billMiles(it)}" style="width:64px"></label><label class="evchk"><input type="checkbox" id="shNt" ${it.client.nt?"checked":""}> Not travelled</label></div>`:""}
-    ${k==="ev"?`<input id="shL" data-addr="event" value="${esc(it.loc||"")}" placeholder="📍 Location (optional)" aria-label="Location" autocomplete="off"><div class="shrow"><label class="evl"><span>Travel</span><input id="shTr" class="num" inputmode="numeric" value="${+it.travel||""}" placeholder="min" style="width:64px"></label><label class="evchk"><input type="checkbox" id="shRt" ${it.rt?"checked":""}> Round trip</label></div>`
+      <div class="shrow"><label class="evl"><span>Real start</span><input id="shAs" type="time" step="60" value="${cAs(it)}"></label><label class="evl"><span>Real end</span><input id="shAe" type="time" step="60" value="${cAe(it)}"></label><label class="evl" title="Leave empty to use the trip below"><span>Bill miles</span><input id="shMi" class="num" inputmode="decimal" value="${it.client.mi??""}" placeholder="auto" style="width:64px"></label><label class="evchk"><input type="checkbox" id="shNt" ${it.client.nt?"checked":""}> Not travelled</label></div>`:""}
+    ${k==="ev"&&it.client?tripEditor(it,ds):""}
+    ${k==="ev"?`${it.client?"":`<input id="shL" data-addr="event" value="${esc(it.loc||"")}" placeholder="📍 Location (optional)" aria-label="Location" autocomplete="off">`}<div class="shrow"><label class="evl"><span>Travel</span><input id="shTr" class="num" inputmode="numeric" value="${+it.travel||""}" placeholder="min" style="width:64px"></label>${it.client?"":`<label class="evchk"><input type="checkbox" id="shRt" ${it.rt?"checked":""}> Round trip</label>`}</div>`
       :`<label class="evchk"><input type="checkbox" id="shDone" ${it.status==="done"?"checked":""}> Done</label>`}
     <div class="shbtns"><button type="button" class="ib danger" data-sh="del">Delete</button>${k==="task"&&it.start?`<button type="button" class="ib" data-sh="unsched">Take off calendar</button>`:""}<span class="sp"></span><button type="button" class="ib" data-sh="close">Cancel</button><button class="ib primary2">Save</button></div></form>`;
   try{if(!matchMedia("(pointer:coarse)").matches)setTimeout(()=>{const t=document.getElementById("shT");if(t)t.focus()},30)}catch(_){}}
 function sheetInfo(e,ds){const fa=evFromAddr(e,parse(ds)),m=MODES[e.mode]||MODES.car;
   return `<div class="shinfo"><div class="shwhen">🕘 ${fmtT(toMin(e.start))} – ${fmtT(toMin(e.end))} · ${fmtDs(ds)}</div>
-    ${e.loc?`<div class="shaddr">📍 <b>${esc(e.loc)}</b></div>${+e.travel?`<div class="sub">${m[0]} ${fmtH(+e.travel)}${fromLabel(e)?" from "+esc(fromLabel(e)):""} · leave by ${fmtT(toMin(e.start)-e.travel)}${e.rt?" · round trip":""}</div>`:""}
+    ${e.client&&e.client.fac?`<div class="shfac">🏥 <b>${esc(e.client.fac)}</b></div>`:""}
+    ${e.loc?`<div class="shaddr">📍 ${e.client&&e.client.fac?esc(e.loc):`<b>${esc(e.loc)}</b>`}</div>${+e.travel?`<div class="sub">${m[0]} ${fmtH(+e.travel)}${fromLabel(e)?" from "+esc(fromLabel(e)):""} · leave by ${fmtT(toMin(e.start)-e.travel)}${e.rt?" · round trip":""}</div>`:""}
       <a class="ib" href="${mapsLink(fa||"",e.loc,e.mode)}" target="_blank" rel="noopener">Directions ↗</a>`:`<div class="sub">No location yet. Add one below.</div>`}</div>`}
+function tripEditor(e,ds){const c=e.client||{},fr=e.from&&e.from!=="none"?e.from:(homeId()||"addr"),nx=evNext(e);
+  const fopts=places().map(p=>`<option value="${p.id}" ${fr===p.id?"selected":""}>${p.id===homeId()?"★ ":""}${esc(p.name)}</option>`).join("")+`<option value="prev" ${fr==="prev"?"selected":""}>Previous job</option><option value="addr" ${fr==="addr"?"selected":""}>Other address…</option>`;
+  return `<div class="trip">
+    <div class="tleg"><span class="tdot">A</span><label class="evl"><span>From</span><select id="shFrom">${fopts}</select></label>
+      <input id="shFromA" data-addr="event" value="${esc(e.fromAddr||"")}" placeholder="From address" autocomplete="off" ${fr==="addr"?"":"hidden"}></div>
+    <div class="tleg"><span class="tline"></span><label class="evl"><span>Miles</span><input id="shMA" class="num" inputmode="decimal" value="${setv(c.mA)?c.mA:""}" placeholder="auto" style="width:64px"></label><button type="button" class="ib tfind" data-sh="find" data-leg="A">Find miles</button></div>
+    <div class="tleg"><span class="tdot b">B</span><label class="evl" style="flex:1 1 100%"><span>To</span><input id="shL" data-addr="event" value="${esc(e.loc||"")}" placeholder="📍 Job address" aria-label="Location" autocomplete="off"></label></div>
+    <div class="tleg"><span class="tline"></span><label class="evl"><span>Final destination</span><select id="shNx">${Object.entries(NXL).map(([k,v])=>`<option value="${k}" ${nx===k?"selected":""}>${v}</option>`).join("")}</select></label>
+      <input id="shNxA" data-addr="event" value="${esc(e.nextAddr||"")}" placeholder="Final destination address" autocomplete="off" ${nx==="addr"?"":"hidden"}></div>
+    <div class="tleg" id="shMBrow" ${nx==="home"||nx==="addr"?"":"hidden"}><span class="tline"></span><label class="evl"><span>Miles</span><input id="shMB" class="num" inputmode="decimal" value="${setv(c.mB)?c.mB:""}" placeholder="auto" style="width:64px"></label><button type="button" class="ib tfind" data-sh="find" data-leg="B">Find miles</button></div>
+    <p class="sub" id="shTrip">${esc(tripText(e,parse(ds)))}</p></div>`}
+function sheetTripTmp(){const it=S.sheet&&sheetItem();if(!it||!it.client)return null;const v=i=>(document.getElementById(i)||{}).value;
+  return Object.assign({},it,{loc:(v("shL")||"").trim(),from:v("shFrom"),fromAddr:v("shFromA")||"",next:v("shNx"),nextAddr:v("shNxA")||"",
+    client:Object.assign({},it.client,{mA:(v("shMA")||"").trim(),mB:(v("shMB")||"").trim(),mi:(v("shMi")||"").trim(),nt:!!(document.getElementById("shNt")||{}).checked})})}
+function sheetTripRefresh(){const t=sheetTripTmp();if(!t)return;const d=parse(S.sheet.ds),L=tripLegs(Object.assign({},t,{client:Object.assign({},t.client,{mA:"",mB:""})}),d);
+  const g=i=>document.getElementById(i);g("shFromA").hidden=t.from!=="addr";g("shNxA").hidden=t.next!=="addr";g("shMBrow").hidden=!(t.next==="home"||t.next==="addr");
+  g("shMA").placeholder=L.a==null?"type":String(L.a);g("shMB").placeholder=L.b==null?"type":String(L.b);g("shTrip").textContent=tripText(t,d)}
+document.addEventListener("input",e=>{if(e.target.closest&&e.target.closest("#sheet .trip, #sheet #shMi"))sheetTripRefresh()});
+document.addEventListener("change",e=>{if(e.target.closest&&e.target.closest("#sheet .trip, #sheet #shNt"))sheetTripRefresh()});
+document.addEventListener("click",e=>{const b=e.target.closest('#sheet [data-sh="find"]');if(!b)return;const t=sheetTripTmp();if(!t)return;const d=parse(S.sheet.ds),L=tripLegs(t,d);
+  const [a1,a2]=b.dataset.leg==="A"?[L.o,t.loc]:[t.loc,L.f];if(!a1||!a2){toast("Add both addresses first");return}
+  b.disabled=true;b.textContent="Finding…";leg(a1,a2).then(r=>{const i=document.getElementById(b.dataset.leg==="A"?"shMA":"shMB");i.value=Math.round(r.mi*10)/10;sheetTripRefresh()})
+    .catch(()=>toast("Couldn't reach the map here. Type the miles (Google Maps shows them)."))
+    .finally(()=>{b.disabled=false;b.textContent="Find miles"})},true);
 function closeSheet(){S.sheet=null;drawSheet()}
 document.addEventListener("click",e=>{const m=document.getElementById("sheet");if(!m||!S.sheet)return;
   if(e.target===m){if(downTgt===m)closeSheet();return}const b=e.target.closest("[data-sh]");if(!b)return;const a=b.dataset.sh,{k,ds,id}=S.sheet;
@@ -2392,7 +2430,15 @@ document.addEventListener("submit",e=>{const f=e.target.closest("form[data-sheet
     const loc=(v("shL")||"").trim();ev.loc=loc;if(!loc){ev.from="none";ev.travel=0}else if(ev.client&&(!ev.from||ev.from==="none"))ev.from=homeId()||"none";
     ev.travel=Math.max(0,parseInt(v("shTr"),10)||0);
     if(ev.client){const cs=document.getElementById("shCs"),a1=toMin(v("shAs")),a2=toMin(v("shAe"));if(a1==null||a2==null||a2<=a1){toast("Real end must be after real start");return}
-      Object.assign(ev.client,{st:cs?cs.dataset.v:cSt(ev),job:(v("shJob")||"").trim(),as:v("shAs"),ae:v("shAe")});ev.client.nt=!!(document.getElementById("shNt")||{}).checked;const mi=(v("shMi")||"").trim();if(mi==="")delete ev.client.mi;else ev.client.mi=Math.max(0,parseFloat(mi)||0)}ev.rt=!!(document.getElementById("shRt")||{}).checked;persist("d"+to)}
+      Object.assign(ev.client,{st:cs?cs.dataset.v:cSt(ev),job:(v("shJob")||"").trim(),as:v("shAs"),ae:v("shAe")});
+      {const fr=v("shFrom"),nx=v("shNx")||"home",d2=parse(to);ev.from=loc?(fr||homeId()||"none"):"none";ev.fromAddr=fr==="addr"?(v("shFromA")||"").trim():"";ev.next=nx;ev.nextAddr=nx==="addr"?(v("shNxA")||"").trim():"";
+        const num=x=>{x=(x||"").trim();return x===""?null:Math.max(0,parseFloat(x)||0)},mA=num(v("shMA")),mB=num(v("shMB"));
+        if(mA==null)delete ev.client.mA;else ev.client.mA=mA;if(mB==null||!(nx==="home"||nx==="addr"))delete ev.client.mB;else ev.client.mB=mB;
+        const L=tripLegs(ev,d2);if(mA!=null)rememberPair(L.o,ev.loc,mA);if(mB!=null)rememberPair(ev.loc,L.f,mB);
+        const others=dayEvents(d2).filter(x=>x.client&&x.loc&&x.id!==ev.id&&!String(x.id).includes(":"));
+        if(nx==="nextjob"){const n=others.filter(x=>toMin(x.start)>=toMin(ev.end)).sort((a,b)=>toMin(a.start)-toMin(b.start))[0];if(n&&n.from!=="prev"&&n.from!=="addr"){n.from="prev"}}
+        if(fr==="prev"){const p=others.filter(x=>toMin(x.end)<=toMin(ev.start)).sort((a,b)=>toMin(b.end)-toMin(a.end))[0];if(p&&evNext(p)==="home"){p.next="nextjob";p.rt=false}}}ev.client.nt=!!(document.getElementById("shNt")||{}).checked;const mi=(v("shMi")||"").trim();if(mi==="")delete ev.client.mi;else ev.client.mi=Math.max(0,parseFloat(mi)||0)}
+    ev.rt=ev.client?(evNext(ev)==="home"||evNext(ev)==="addr"):!!(document.getElementById("shRt")||{}).checked;persist("d"+to)}
   closeSheet();render();toast("Saved"+(to!==ds?" · moved to "+fmtDs(to):""))},true);
 
 /* ---- address suggestions (in the page, never in the keyboard bar) ---- */
@@ -2539,7 +2585,7 @@ function clientMeta(e){const c=e.client||{};return `<div class="cmeta">${c.fac?`
     <label class="ef"><span>Job#</span><input data-ef="job" value="${esc(c.job||"")}" placeholder="—" style="width:84px"></label>
     <label class="ef"><span>Real start</span><input type="time" step="60" data-ef="as" value="${cAs(e)}"></label>
     <label class="ef"><span>Real end</span><input type="time" step="60" data-ef="ae" value="${cAe(e)}"></label>
-    <label class="ef"><span>Miles</span><input class="num" inputmode="decimal" data-ef="mi" value="${c.mi??""}" placeholder="${billMiles(e)}" title="${oneWay(e)!=null?oneWay(e)+" mi each way · "+(e.rt===false?"one way "+oneWay(e):"round trip "+(2*oneWay(e)))+(((e.rt===false?1:2)*oneWay(e))<billCfg().free?" (under "+billCfg().free+", not counted)":""):"Type the billable miles"}" style="width:60px"></label>
+    <label class="ef"><span>Miles</span><input class="num" inputmode="decimal" data-ef="mi" value="${c.mi??""}" placeholder="${billMiles(e)}" title="${esc(tripText(e,evDay(e)))}" style="width:60px"></label>
     <button type="button" class="ctrv ${c.nt?"no":""}" data-ed="ctrav" title="Click if you did not travel to this job">${c.nt?"🚫 Not travelled":"🚗 Travelled"}</button>${c.home&&!c.nt&&cSt(e)!=="missed"?`<span class="sub">↩ home after</span>`:""}</div>`}
 
 /* ---- miles: home → client 1 → client 2 → … → home ---- */
@@ -2552,8 +2598,32 @@ const travels=e=>cSt(e)!=="missed"&&!(e.client&&e.client.nt);
 const MILE_TABLE=[];
 const normAddr=a=>String(a||"").toUpperCase().replace(/[.,#]/g," ").replace(/\s+/g," ").trim();
 function oneWay(e){const a=normAddr(e.loc),t=(billCfg().raw.places||MILE_TABLE).find(r=>a.startsWith(r[0]));return t?t[1]:(e.client&&e.client.ow!=null?e.client.ow:null)}
-function billMiles(e){const c=e.client||{};if(!travels(e))return 0;if(c.mi!=null&&c.mi!=="")return +c.mi||0;const ow=oneWay(e);if(ow==null)return 0;
-  const trip=Math.round((e.rt===false?1:2)*ow*10)/10;return trip<billCfg().free?0:trip}
+/* trip: origin → this job → then (home, next job, another address, or nowhere) */
+const NXL={home:"★ Home (round trip)",nextjob:"Next job (counted on that job)",addr:"Other address…",none:"Nowhere (one way)"};
+const homeAddr=()=>(placeById(homeId())||{}).addr||"";
+const isHomeAddr=a=>!!a&&!!homeAddr()&&normAddr(a)===normAddr(homeAddr());
+function tableMiles(a){if(!a)return null;const n=normAddr(a),t=(billCfg().raw.places||MILE_TABLE).find(r=>n.startsWith(r[0]));return t?t[1]:null}
+const pairKey=(a,b)=>[normAddr(a),normAddr(b)].sort().join("|");
+function pairMiles(a,b,ow){if(!a||!b)return null;if(normAddr(a)===normAddr(b))return 0;
+  if(isHomeAddr(a)){const t=tableMiles(b);return t!=null?t:(ow!=null?+ow:null)}
+  if(isHomeAddr(b)){const t=tableMiles(a);return t!=null?t:(ow!=null?+ow:null)}
+  const p=(billCfg().raw.pairs||{})[pairKey(a,b)];return p==null?null:+p}
+function rememberPair(a,b,mi){if(!a||!b||mi==null||isNaN(mi)||isHomeAddr(a)||isHomeAddr(b))return;const r=billCfg().raw;r.pairs=r.pairs||{};r.pairs[pairKey(a,b)]=mi;persist("settings")}
+const evNext=e=>e.next||(e.rt===false?"none":"home");
+function evDay(e){for(const k in S.docs)if(/^d\d{4}-/.test(k)&&(S.docs[k].events||[]).some(v=>v===e||v.id===e.id))return parse(k.slice(1));return S.focus||new Date()}
+function nextStop(e,d){const nx=evNext(e);if(nx==="home")return homeAddr()||null;if(nx==="addr")return (e.nextAddr||"").trim()||null;
+  if(nx==="nextjob"){const n=dayEvents(d).filter(v=>v.loc&&v.id!==e.id&&toMin(v.start)>=toMin(e.end)).sort((a,b)=>toMin(a.start)-toMin(b.start))[0];return n?n.loc:null}return null}
+const setv=v=>v!=null&&v!=="";
+function tripLegs(e,d){const c=e.client||{},o=evFromAddr(e,d),nx=evNext(e),f=nextStop(e,d);
+  const a=setv(c.mA)?+c.mA:(!o||!e.loc?0:pairMiles(o,e.loc,c.ow));
+  const b=nx==="nextjob"||nx==="none"||!e.loc?0:setv(c.mB)?+c.mB:(!f?0:pairMiles(e.loc,f,c.ow));
+  return {o,f,nx,a,b}}
+function billMiles(e,d){const c=e.client||{};if(!travels(e))return 0;if(setv(c.mi))return +c.mi||0;
+  const L=tripLegs(e,d||evDay(e));const trip=Math.round(((L.a||0)+(L.b||0))*10)/10;return trip<billCfg().free?0:trip}
+function tripText(e,d){const L=tripLegs(e,d),fl=x=>x==null?"? mi":x+" mi",nm=a=>a?(isHomeAddr(a)?"Home":a.split(/,| [A-Z]{2} \d{5}/)[0]):"?";
+  const parts=[`${nm(L.o)} → this job ${fl(L.a)}`];if(L.nx==="home"||L.nx==="addr")parts.push(`→ ${nm(L.f)} ${fl(L.b)}`);else if(L.nx==="nextjob")parts.push("→ next job");
+  const tot=Math.round(((L.a||0)+(L.b||0))*10)/10,bm=billMiles(e,d),free=billCfg().free;
+  return parts.join(" ")+` · ${L.a==null||L.b==null?"type the missing miles · ":""}billed ${bm} mi${L.a!=null&&L.b!=null&&tot&&!bm&&travels(e)&&!setv((e.client||{}).mi)?` (under ${free}, not counted)`:""}`}
 function dayClients(d){return dayEvents(d).filter(e=>e.client).sort((a,b)=>toMin(a.start)-toMin(b.start))}
 async function estimateMonthMiles(y,m,quiet){const home=(places().find(p=>p.id===homeId())||{}).addr;if(!home){if(!quiet)toast("Save your Home place first (Event tab → My places)");return}
   let done=0,fail=0;const n=new Date(y,m+1,0).getDate();
