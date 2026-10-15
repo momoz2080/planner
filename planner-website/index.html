@@ -2386,17 +2386,17 @@ function tripEditor(e,ds){const c=e.client||{},fr=e.from&&e.from!=="none"?e.from
   return `<div class="trip">
     <div class="tleg"><span class="tdot">A</span><label class="evl"><span>From</span><select id="shFrom">${fopts}</select></label>
       <input id="shFromA" data-addr="event" value="${esc(e.fromAddr||"")}" placeholder="From address" autocomplete="off" ${fr==="addr"?"":"hidden"}></div>
-    <div class="tleg"><span class="tline"></span><label class="evl"><span>Miles</span><input id="shMA" class="num" inputmode="decimal" value="${setv(c.mA)?c.mA:""}" placeholder="auto" style="width:64px"></label><button type="button" class="ib tfind" data-sh="find" data-leg="A">Find miles</button></div>
+    <div class="tleg"><span class="tline"></span><label class="evl"><span>Miles</span><input id="shMA" class="num" inputmode="decimal" value="${setv(c.mA)?c.mA:""}" placeholder="auto" style="width:64px" ${fromCounted(e,parse(ds))?"disabled":""}></label><button type="button" class="ib tfind" data-sh="find" data-leg="A">Find miles</button></div>
     <div class="tleg"><span class="tdot b">B</span><label class="evl" style="flex:1 1 100%"><span>To</span><input id="shL" data-addr="event" value="${esc(e.loc||"")}" placeholder="📍 Job address" aria-label="Location" autocomplete="off"></label></div>
     <div class="tleg"><span class="tline"></span><label class="evl"><span>Final destination</span><select id="shNx">${Object.entries(NXL).map(([k,v])=>`<option value="${k}" ${nx===k?"selected":""}>${v}</option>`).join("")}</select></label>
       <input id="shNxA" data-addr="event" value="${esc(e.nextAddr||"")}" placeholder="Final destination address" autocomplete="off" ${nx==="addr"?"":"hidden"}></div>
-    <div class="tleg" id="shMBrow" ${nx==="home"||nx==="addr"?"":"hidden"}><span class="tline"></span><label class="evl"><span>Miles</span><input id="shMB" class="num" inputmode="decimal" value="${setv(c.mB)?c.mB:""}" placeholder="auto" style="width:64px"></label><button type="button" class="ib tfind" data-sh="find" data-leg="B">Find miles</button></div>
+    <div class="tleg" id="shMBrow" ${nx==="none"?"hidden":""}><span class="tline"></span><label class="evl"><span>Miles</span><input id="shMB" class="num" inputmode="decimal" value="${setv(c.mB)?c.mB:""}" placeholder="auto" style="width:64px"></label><button type="button" class="ib tfind" data-sh="find" data-leg="B">Find miles</button></div>
     <p class="sub" id="shTrip">${esc(tripText(e,parse(ds)))}</p></div>`}
 function sheetTripTmp(){const it=S.sheet&&sheetItem();if(!it||!it.client)return null;const v=i=>(document.getElementById(i)||{}).value;
   return Object.assign({},it,{loc:(v("shL")||"").trim(),from:v("shFrom"),fromAddr:v("shFromA")||"",next:v("shNx"),nextAddr:v("shNxA")||"",
     client:Object.assign({},it.client,{mA:(v("shMA")||"").trim(),mB:(v("shMB")||"").trim(),mi:(v("shMi")||"").trim(),nt:!!(document.getElementById("shNt")||{}).checked})})}
 function sheetTripRefresh(){const t=sheetTripTmp();if(!t)return;const d=parse(S.sheet.ds),L=tripLegs(Object.assign({},t,{client:Object.assign({},t.client,{mA:"",mB:""})}),d);
-  const g=i=>document.getElementById(i);g("shFromA").hidden=t.from!=="addr";g("shNxA").hidden=t.next!=="addr";g("shMBrow").hidden=!(t.next==="home"||t.next==="addr");
+  const g=i=>document.getElementById(i);g("shFromA").hidden=t.from!=="addr";g("shNxA").hidden=t.next!=="addr";g("shMBrow").hidden=t.next==="none";g("shMA").disabled=fromCounted(t,d);
   g("shMA").placeholder=L.a==null?"type":String(L.a);g("shMB").placeholder=L.b==null?"type":String(L.b);g("shTrip").textContent=tripText(t,d)}
 document.addEventListener("input",e=>{if(e.target.closest&&e.target.closest("#sheet .trip, #sheet #shMi"))sheetTripRefresh()});
 document.addEventListener("change",e=>{if(e.target.closest&&e.target.closest("#sheet .trip, #sheet #shNt"))sheetTripRefresh()});
@@ -2433,11 +2433,12 @@ document.addEventListener("submit",e=>{const f=e.target.closest("form[data-sheet
       Object.assign(ev.client,{st:cs?cs.dataset.v:cSt(ev),job:(v("shJob")||"").trim(),as:v("shAs"),ae:v("shAe")});
       {const fr=v("shFrom"),nx=v("shNx")||"home",d2=parse(to);ev.from=loc?(fr||homeId()||"none"):"none";ev.fromAddr=fr==="addr"?(v("shFromA")||"").trim():"";ev.next=nx;ev.nextAddr=nx==="addr"?(v("shNxA")||"").trim():"";
         const num=x=>{x=(x||"").trim();return x===""?null:Math.max(0,parseFloat(x)||0)},mA=num(v("shMA")),mB=num(v("shMB"));
-        if(mA==null)delete ev.client.mA;else ev.client.mA=mA;if(mB==null||!(nx==="home"||nx==="addr"))delete ev.client.mB;else ev.client.mB=mB;
+        if(mA==null)delete ev.client.mA;else ev.client.mA=mA;if(mB==null||nx==="none")delete ev.client.mB;else ev.client.mB=mB;
         const L=tripLegs(ev,d2);if(mA!=null)rememberPair(L.o,ev.loc,mA);if(mB!=null)rememberPair(ev.loc,L.f,mB);
         const others=dayEvents(d2).filter(x=>x.client&&x.loc&&x.id!==ev.id&&!String(x.id).includes(":"));
         if(nx==="nextjob"){const n=others.filter(x=>toMin(x.start)>=toMin(ev.end)).sort((a,b)=>toMin(a.start)-toMin(b.start))[0];if(n&&n.from!=="prev"&&n.from!=="addr"){n.from="prev"}}
-        if(fr==="prev"){const p=others.filter(x=>toMin(x.end)<=toMin(ev.start)).sort((a,b)=>toMin(b.end)-toMin(a.end))[0];if(p&&evNext(p)==="home"){p.next="nextjob";p.rt=false}}}ev.client.nt=!!(document.getElementById("shNt")||{}).checked;const mi=(v("shMi")||"").trim();if(mi==="")delete ev.client.mi;else ev.client.mi=Math.max(0,parseFloat(mi)||0)}
+        if(fr==="prev"){const p=others.filter(x=>toMin(x.end)<=toMin(ev.start)).sort((a,b)=>toMin(b.end)-toMin(a.end))[0];if(p&&evNext(p)==="home"){p.next="nextjob";p.rt=false;delete p.client.mB}
+          if(p&&evNext(p)==="nextjob"&&mA!=null){p.client.mB=mA;delete ev.client.mA}}}ev.client.nt=!!(document.getElementById("shNt")||{}).checked;const mi=(v("shMi")||"").trim();if(mi==="")delete ev.client.mi;else ev.client.mi=Math.max(0,parseFloat(mi)||0)}
     ev.rt=ev.client?(evNext(ev)==="home"||evNext(ev)==="addr"):!!(document.getElementById("shRt")||{}).checked;persist("d"+to)}
   closeSheet();render();toast("Saved"+(to!==ds?" · moved to "+fmtDs(to):""))},true);
 
@@ -2599,7 +2600,7 @@ const MILE_TABLE=[];
 const normAddr=a=>String(a||"").toUpperCase().replace(/[.,#]/g," ").replace(/\s+/g," ").trim();
 function oneWay(e){const a=normAddr(e.loc),t=(billCfg().raw.places||MILE_TABLE).find(r=>a.startsWith(r[0]));return t?t[1]:(e.client&&e.client.ow!=null?e.client.ow:null)}
 /* trip: origin → this job → then (home, next job, another address, or nowhere) */
-const NXL={home:"★ Home (round trip)",nextjob:"Next job (counted on that job)",addr:"Other address…",none:"Nowhere (one way)"};
+const NXL={home:"★ Home (round trip)",nextjob:"Next job",addr:"Other address…",none:"Nowhere (one way)"};
 const homeAddr=()=>(placeById(homeId())||{}).addr||"";
 const isHomeAddr=a=>!!a&&!!homeAddr()&&normAddr(a)===normAddr(homeAddr());
 function tableMiles(a){if(!a)return null;const n=normAddr(a),t=(billCfg().raw.places||MILE_TABLE).find(r=>n.startsWith(r[0]));return t?t[1]:null}
@@ -2614,14 +2615,18 @@ function evDay(e){for(const k in S.docs)if(/^d\d{4}-/.test(k)&&(S.docs[k].events
 function nextStop(e,d){const nx=evNext(e);if(nx==="home")return homeAddr()||null;if(nx==="addr")return (e.nextAddr||"").trim()||null;
   if(nx==="nextjob"){const n=dayEvents(d).filter(v=>v.loc&&v.id!==e.id&&toMin(v.start)>=toMin(e.end)).sort((a,b)=>toMin(a.start)-toMin(b.start))[0];return n?n.loc:null}return null}
 const setv=v=>v!=null&&v!=="";
-function tripLegs(e,d){const c=e.client||{},o=evFromAddr(e,d),nx=evNext(e),f=nextStop(e,d);
-  const a=setv(c.mA)?+c.mA:(!o||!e.loc?0:pairMiles(o,e.loc,c.ow));
-  const b=nx==="nextjob"||nx==="none"||!e.loc?0:setv(c.mB)?+c.mB:(!f?0:pairMiles(e.loc,f,c.ow));
+function prevJob(e,d){return dayEvents(d).filter(v=>v.loc&&toMin(v.end)<=toMin(e.start)&&v.id!==e.id).sort((a,b)=>toMin(b.end)-toMin(a.end))[0]||null}
+const fromCounted=(e,d)=>{if(e.from!=="prev")return false;const p=prevJob(e,d);return !!(p&&p.client&&evNext(p)==="nextjob")};
+function tripLegs(e,d){const c=e.client||{},o=evFromAddr(e,d),nx=evNext(e),f=nextStop(e,d),pc=fromCounted(e,d);
+  const a=pc?0:setv(c.mA)?+c.mA:(!o||!e.loc?0:pairMiles(o,e.loc,c.ow));
+  const b=nx==="none"||!e.loc?0:setv(c.mB)?+c.mB:(!f?(nx==="nextjob"?null:0):pairMiles(e.loc,f,c.ow));
   return {o,f,nx,a,b}}
 function billMiles(e,d){const c=e.client||{};if(!travels(e))return 0;if(setv(c.mi))return +c.mi||0;
-  const L=tripLegs(e,d||evDay(e));const trip=Math.round(((L.a||0)+(L.b||0))*10)/10;return trip<billCfg().free?0:trip}
+  const L=tripLegs(e,d||evDay(e));const trip=Math.round(((L.a||0)+(L.b||0))*10)/10;
+  /* the under-10 rule is for a single trip out and back; jobs linked to another job keep all their miles */
+  const linked=e.from==="prev"||L.nx==="nextjob";return !linked&&trip<billCfg().free?0:trip}
 function tripText(e,d){const L=tripLegs(e,d),fl=x=>x==null?"? mi":x+" mi",nm=a=>a?(isHomeAddr(a)?"Home":a.split(/,| [A-Z]{2} \d{5}/)[0]):"?";
-  const parts=[`${nm(L.o)} → this job ${fl(L.a)}`];if(L.nx==="home"||L.nx==="addr")parts.push(`→ ${nm(L.f)} ${fl(L.b)}`);else if(L.nx==="nextjob")parts.push("→ next job");
+  const parts=[fromCounted(e,d)?`${nm(L.o)} → this job (counted on the previous job)`:`${nm(L.o)} → this job ${fl(L.a)}`];if(L.nx==="home"||L.nx==="addr")parts.push(`→ ${nm(L.f)} ${fl(L.b)}`);else if(L.nx==="nextjob")parts.push(L.f?`→ next job (${nm(L.f)}) ${fl(L.b)}`:"→ next job (none later today)");
   const tot=Math.round(((L.a||0)+(L.b||0))*10)/10,bm=billMiles(e,d),free=billCfg().free;
   return parts.join(" ")+` · ${L.a==null||L.b==null?"type the missing miles · ":""}billed ${bm} mi${L.a!=null&&L.b!=null&&tot&&!bm&&travels(e)&&!setv((e.client||{}).mi)?` (under ${free}, not counted)`:""}`}
 function dayClients(d){return dayEvents(d).filter(e=>e.client).sort((a,b)=>toMin(a.start)-toMin(b.start))}
